@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,80 +16,56 @@ namespace Core
         /// <param name="str"></param>
         /// <param name="maxCharperLine"></param>
         /// <returns></returns>
-        public static PrintModel EvaluteString(this string str, int maxCharPerLine = 22)
+        public static PrintModel EvaluteString(this string str, int maxCharPerLine = 22, bool printDebug = true)
         {
-            string input = "<p>Pastikan Kalibrasi mesin</p><p><br></p><p>Berikut adalah contoh dari text print yang panjang dengan kriteria;</p><ul><li>bentukannya seperti ini, apakah mereka bisa menangkap apa yang dimaksud?</li><li>adapun pendek seperti ini</li><li>belum ditambahkan satu gambar</li></ul>";
+            string _inputv0 = "<p>Pastikan Kalibrasi mesin adalah serupa seperti apa yang sudah disampaikan sebelumnya</p><p><br></p><p>Berikut adalah contoh dari text print yang panjang dengan kriteria;</p><ul><li>bentukannya seperti ini, apakah mereka bisa menangkap apa yang dimaksud?</li><li>adapun pendek seperti ini</li><li>belum ditambahkan satu gambar</li></ul>";
+            string input = "<p class=\"MsoNormal\" style=\"text-align: justify; margin-bottom: 0pt\">Pastikan pada bagian baling-baling mesin miniturbomixer: </p><p class=\"MsoNormal\" style=\"text-align: justify; margin-bottom: 0pt\"><br></p><ul><li style=\"text-align: justify; margin-bottom: 0pt\"><span >Tidak terdapat sisa produk dari produk sebelumnya/<i>batch </i>lainnya/produk lainnya.</span></li><li style=\"text-align: justify; margin-bottom: 0pt\"><span >Tidak terdapat debu/kotoran.</span></li><li style=\"text-align: justify; margin-bottom: 0pt\"><span ><b><i>Part</i> </b>dalam kondisi baik.</span></li><div style=\"text-align: justify\"><span >Catatan:</span></div><div style=\"text-align: justify\">1. Jika <span >digunakan:</span></div><ul style=\"margin-bottom: 1rem\"><li style=\"text-align: justify\">pilih <span >Sesuai, jika hasil memenuhi syarat,</span></li><li style=\"text-align: justify\">pilih <span >Tidak Sesuai, jika hasil tidak memenuhi syarat.</span></li></ul><div style=\"text-align: justify\">2. Jika <span >tidak digunakan</span>, maka pilih <span >NA.</span></div></ul>";
+            //string input = "<p><p></p></p>";
+
             int availableLines = 9;
-            var ListOfStr = ParseStringToList(input);
+            var ListOfStr = input.Extract();
 
             //start dari satu
             int index = 1;
 
-            Console.WriteLine("Write the output");
             foreach (var item in ListOfStr)
             {
-                Console.WriteLine($"{index}. {item}");
+                //switch (item.Item1)
+                //{
+                //    case "ul":
+                //        if (printDebug)
+                //        {
+                //            Console.WriteLine($"{index}. UL Detected!");
+                //        }
+                //        foreach (var ulchild in item.Item2.ExtractUlChildren())
+                //        {
+                //            if (printDebug)
+                //            {
+                //                Console.WriteLine($"{ulchild.Item2}");
+                //                Console.WriteLine($"Element = {ulchild.Item1}");
+                //                Console.WriteLine();
+                //            }
+                //        }
+                //        break;
+                //    default:
+                //        if (printDebug)
+                //        {
+                //            Console.WriteLine($"{index}. {item.Item2}");
+                //            Console.WriteLine($"Element No. {index} = {item.Item1}");
+                //        }
+                //        break;
+                //}
+                if (printDebug)
+                {
+                    Console.WriteLine($"{index}. {item.Item2}");
+                    Console.WriteLine($"Element No. {index} = {item.Item1}");
+                    Console.WriteLine();
+                }
                 index++;
             }
-
-            Console.WriteLine("Expected print:");
-            using (var printString = new PrintModel())
-            {
-                index = 1;
-                int lineUsed = 0;
-                foreach (var item in ListOfStr)
-                {
-                    var (evaluatedString, usedLine) = EvaluteStringPerLine(StripHtmlTags(item), maxChar: maxCharPerLine);
-                    //if (evaluatedString.Count != 1)
-                    //{
-                    //    int subIndex = 1;
-                    //    foreach (var perString in evaluatedString)
-                    //    {
-                    //        Console.WriteLine($"{index}.{subIndex}. {perString}");
-                    //        subIndex++;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    Console.WriteLine($"{index}. {StripHtmlTags(item)}");
-                    //}
-                    if (lineUsed < availableLines)
-                    {
-                        Console.WriteLine($"{index}. {StripHtmlTags(item)}");
-                    }
-                    else
-                    {
-                        Console.WriteLine("breakpage");
-                        Console.WriteLine($"{index}. {StripHtmlTags(item)}");
-                        lineUsed = 0;
-                    }
-                    lineUsed += usedLine;
-                    index++;
-                }
-
-                Console.WriteLine($"estimated line used: {lineUsed}");
-                return printString;
-            }
+            return new PrintModel();
         }
 
-        static List<string> ParseStringToList(this string input)
-        {
-            var result = new List<string>();
-
-            // Regular expression to match full tags (including nested ones)
-            var regex = new Regex(@"(<[^>]+>.*?<\/[^>]+>|<[^>]+>)");
-
-            // Find matches in the input string
-            var matches = regex.Matches(input);
-
-            // Add each match to the result list
-            foreach (Match match in matches)
-            {
-                result.Add(match.Value);
-            }
-
-            return result;
-        }
         static string StripHtmlTags(string input)
         {
             // Regular expression to match HTML tags
@@ -99,12 +76,13 @@ namespace Core
 
             return result;
         }
+
         /// <summary>
-        /// 
+        /// Mengevaluasi 
         /// </summary>
         /// <param name="str"></param>
         /// <param name="maxChar"></param>
-        /// <returns></returns>
+        /// <returns>List dari elemen html dan prakiraan pemakaian baris</returns>
         static (List<string>, int) EvaluteStringPerLine(string str, int maxChar)
         {
             var result = new List<string>();
